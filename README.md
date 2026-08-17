@@ -71,6 +71,50 @@ code here. Add new scripts inside the matching folder and wire up an npm script 
 
 Track your progress in `PROGRESS.md`.
 
+## 6. Put it on GitHub
+
+This folder is the repo root — run git here, not in the parent folder. It already ships
+with a `.gitignore` (excluding `node_modules/`, `dist/`, and `.env`), so your API key never
+enters git history.
+
+### Initialize and make the first commit
+
+```bash
+git init
+git add .
+git commit -m "Initial scaffold"
+```
+
+Run `git status` afterward to confirm you see the week folders and config files — but
+**not** `.env` or `node_modules/`.
+
+### Push it — Option A: GitHub CLI (fewest steps)
+
+The `gh` tool creates the remote repo and pushes in a single command. Install it if needed
+(`winget install GitHub.CLI` on Windows, `brew install gh` on macOS), sign in once, then run:
+
+```bash
+gh auth login
+gh repo create claude-agents-course --private --source=. --remote=origin --push
+```
+
+Drop `--private` for a public repo. That command creates the GitHub repo, adds it as
+`origin`, and pushes your first commit.
+
+### Push it — Option B: the github.com website
+
+1. Create a new **empty** repository on GitHub — do **not** let it add a README or
+   .gitignore (that avoids a merge conflict on your first push).
+2. Connect it and push:
+
+```bash
+git remote add origin https://github.com/YOUR-USERNAME/claude-agents-course.git
+git branch -M main
+git push -u origin main
+```
+
+> The push step needs network access to GitHub, so run it in your own terminal.
+
 ## A note on model names
 
 The scripts use `claude-opus-4-8`. Model identifiers change over time — if a call ever
