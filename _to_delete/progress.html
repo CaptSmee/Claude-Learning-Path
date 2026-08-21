@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Tracker · Claude Agents Course</title>
+<style>
+  :root{
+    --bg:#0f1115;--bg-card:#1b1f28;--bg-card-2:#212734;--border:#2b313d;--border-soft:#232833;
+    --text:#e7eaf0;--text-soft:#a5adbb;--text-dim:#737d8c;--accent:#d19a66;--accent-2:#e0b184;
+    --accent-soft:rgba(209,154,102,.14);--green:#7cc98f;--red:#e06c75;--blue:#7aa2f7;
+    --radius:14px;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+  }
+  @media (prefers-color-scheme:light){:root{
+    --bg:#f6f7f9;--bg-card:#fff;--bg-card-2:#f4f6f9;--border:#e0e3e9;--border-soft:#e8eaef;
+    --text:#1c2027;--text-soft:#4a525f;--text-dim:#8a93a1;--accent:#b4712f;--accent-2:#9a5f24;
+    --accent-soft:rgba(180,113,47,.10);--green:#2f8f4e;--red:#c0392b;--blue:#3b62c4;
+    --shadow:0 1px 2px rgba(20,30,50,.06),0 10px 30px rgba(20,30,50,.08);
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:36px 20px 100px}
+  .eyebrow{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2);font-weight:600;margin-bottom:10px}
+  h1{font-size:1.7rem;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--text-soft);margin:0 0 22px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--bg-card);
+    border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  button,.btn{font:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:9px;padding:9px 15px;border:1px solid var(--border);
+    background:var(--bg-card-2);color:var(--text);transition:all .15s}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#0f1115;border-color:var(--accent)}
+  button.primary:hover{filter:brightness(1.05)}
+  .status{flex:1;min-width:180px;font-size:13.5px;color:var(--text-soft)}
+  .status.ok{color:var(--green)} .status.err{color:var(--red)} .status.warn{color:var(--accent-2)}
+  .barwrap{display:flex;align-items:center;gap:14px;margin:6px 0 26px}
+  .bar{flex:1;height:11px;background:var(--bg-card-2);border:1px solid var(--border-soft);border-radius:999px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;transition:width .35s}
+  .pct{font-size:14px;font-weight:600;color:var(--accent);white-space:nowrap;min-width:88px;text-align:right}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:6px 18px 10px;margin:14px 0;box-shadow:var(--shadow)}
+  .card h3{font-size:1.05rem;margin:16px 0 8px}
+  .row{display:flex;align-items:flex-start;gap:11px;padding:8px 0;border-bottom:1px solid var(--border-soft);cursor:pointer}
+  .row:last-child{border-bottom:none}
+  .row input{display:none}
+  .box{flex-shrink:0;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border);margin-top:1px;
+    background:var(--bg-card-2);display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .box::after{content:"";width:6px;height:11px;border:solid #0f1115;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);opacity:0;transition:all .15s;margin-top:-2px}
+  .row input:checked ~ .box{background:var(--accent);border-color:var(--accent)}
+  .row input:checked ~ .box::after{opacity:1;transform:rotate(45deg) scale(1)}
+  .txt{font-size:14.5px;color:var(--text-soft)}
+  .row input:checked ~ .txt{color:var(--text-dim);text-decoration:line-through}
+  .empty{background:var(--bg-card);border:1px dashed var(--border);border-radius:12px;padding:30px 20px;text-align:center;color:var(--text-soft)}
+  details{margin-top:16px;color:var(--text-soft);font-size:13.5px}
+  details summary{cursor:pointer;color:var(--text-dim)}
+  details .inner{margin-top:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--accent-soft);color:var(--accent-2);padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .hint{font-size:12.5px;color:var(--text-dim);margin-top:14px}
+  a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Claude Agents Course</div>
+  <h1>Progress Tracker</h1>
+  <p class="sub">Link your <code>PROGRESS.md</code> once — your ticks are read from it on open and saved straight back into the file. Commit it to git and your progress travels with the repo.</p>
+
+  <div class="toolbar">
+    <span class="status" id="status">Loading…</span>
+    <button class="primary" id="linkBtn" style="display:none">Link PROGRESS.md</button>
+    <button id="reconnectBtn" style="display:none">Reconnect</button>
+    <button id="reloadBtn" style="display:none">Reload from file</button>
+  </div>
+
+  <div class="barwrap">
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="pct" id="pct">0 / 0</div>
+  </div>
+
+  <div id="content">
+    <div class="empty" id="empty">No file linked yet. Click <b>Link PROGRESS.md</b> above and pick the file in your repo.</div>
+  </div>
+
+  <details>
+    <summary>Manual mode (any browser, or if the picker is blocked)</summary>
+    <div class="inner">
+      <p style="margin-top:0">If your browser doesn't support direct file saving (Firefox, Safari) or the picker is blocked, load the file here. Your ticks persist in this browser; use <b>Download</b> to write them back to <code>PROGRESS.md</code>.</p>
+      <input type="file" id="fileInput" accept=".md,text/markdown">
+      <button id="downloadBtn" style="display:none;margin-left:8px">Download PROGRESS.md</button>
+    </div>
+  </details>
+
+  <p class="hint">Tip: two-way file sync works in Chrome and Edge. Nothing here is uploaded anywhere — the file never leaves your machine.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var hasFSA = ("showOpenFilePicker" in window);
+  var DB="cac-progress", STORE="handles", KEY="progressFile";
+  var state = { handle:null, lines:[], items:[], fileName:"PROGRESS.md", mode: hasFSA ? "fsa" : "fallback" };
+
+  var $ = function(s){ return document.querySelector(s); };
+  function setStatus(msg, kind){ var el=$("#status"); el.textContent=msg; el.className="status "+(kind||""); }
+  function show(id, on){ var el=$(id); if(el) el.style.display = on ? "" : "none"; }
+
+  /* ---------- tiny IndexedDB for the file handle ---------- */
+  function idb(){ return new Promise(function(res,rej){
+    try{
+      var r=indexedDB.open(DB,1);
+      r.onupgradeneeded=function(){ r.result.createObjectStore(STORE); };
+      r.onsuccess=function(){ res(r.result); };
+      r.onerror=function(){ rej(r.error); };
+    }catch(e){ rej(e); }
+  }); }
+  function idbGet(k){ return idb().then(function(db){ return new Promise(function(res,rej){
+    var t=db.transaction(STORE,"readonly").objectStore(STORE).get(k);
+    t.onsuccess=function(){ res(t.result); }; t.onerror=function(){ rej(t.error); };
+  }); }).catch(function(){ return null; }); }
+  function idbSet(k,v){ return idb().then(function(db){ return new Promise(function(res,rej){
+    var tx=db.transaction(STORE,"readwrite"); tx.objectStore(STORE).put(v,k);
+    tx.oncomplete=function(){ res(); }; tx.onerror=function(){ rej(tx.error); };
+  }); }).catch(function(){}); }
+
+  /* ---------- markdown parse / toggle ---------- */
+  function parse(){
+    var items=[], section="Checklist", order=[], map={};
+    state.lines.forEach(function(line,i){
+      var h=line.match(/^(#{1,6})\s+(.*)$/);
+      if(h){ section=h[2].trim(); return; }
+      var m=line.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+      if(m){
+        var it={ line:i, checked:(m[1].toLowerCase()==="x"), label:m[2].trim(), section:section };
+        items.push(it);
+        if(!map[section]){ map[section]=[]; order.push(section); }
+        map[section].push(it);
+      }
+    });
+    state.items=items;
+    return order.map(function(s){ return { title:s, items:map[s] }; });
+  }
+  function toggleLine(i, checked){
+    state.lines[i] = state.lines[i].replace(/\[([ xX])\]/, checked ? "[x]" : "[ ]");
+  }
+  function lsKey(){ return "cac-progress::"+state.fileName; }
+  function applyOverrides(){
+    var raw; try{ raw=localStorage.getItem(lsKey()); }catch(e){ return; }
+    if(!raw) return;
+    var saved; try{ saved=JSON.parse(raw); }catch(e){ return; }
+    state.items.forEach(function(it){
+      if(Object.prototype.hasOwnProperty.call(saved,it.label) && saved[it.label]!==it.checked){
+        it.checked=saved[it.label]; toggleLine(it.line, it.checked);
+      }
+    });
+  }
+
+  /* ---------- render ---------- */
+  function loadText(text){
+    state.lines = text.split("\n");
+    var secs = parse();
+    if(state.mode==="fallback"){ applyOverrides(); }
+    renderSecs(secs);
+    updateProgress();
+  }
+  function renderSecs(secs){
+    var root=$("#content"); root.innerHTML="";
+    if(!secs.length){ root.innerHTML='<div class="empty">No <code>- [ ]</code> checklist items found in that file.</div>'; return; }
+    secs.forEach(function(sec){
+      var card=document.createElement("div"); card.className="card";
+      var h=document.createElement("h3"); h.textContent=sec.title; card.appendChild(h);
+      sec.items.forEach(function(it){
+        var row=document.createElement("label"); row.className="row";
+        var cb=document.createElement("input"); cb.type="checkbox"; cb.checked=it.checked; cb.setAttribute("data-line", it.line);
+        cb.addEventListener("change", onToggle);
+        var box=document.createElement("span"); box.className="box";
+        var txt=document.createElement("span"); txt.className="txt"; txt.textContent=it.label;
+        row.appendChild(cb); row.appendChild(box); row.appendChild(txt);
+        card.appendChild(row);
+      });
+      root.appendChild(card);
+    });
+  }
+  function updateProgress(){
+    var total=state.items.length, done=state.items.filter(function(i){return i.checked;}).length;
+    var pct= total ? Math.round(done/total*100) : 0;
+    $("#fill").style.width=pct+"%";
+    $("#pct").textContent=done+" / "+total+"  ("+pct+"%)";
+  }
+
+  /* ---------- toggle + save ---------- */
+  function onToggle(e){
+    var i=parseInt(e.target.getAttribute("data-line"),10);
+    var checked=e.target.checked;
+    toggleLine(i, checked);
+    var it=state.items.filter(function(x){return x.line===i;})[0]; if(it) it.checked=checked;
+    updateProgress();
+    save();
+  }
+  function save(){
+    if(state.mode==="fsa" && state.handle){
+      setStatus("Saving…");
+      state.handle.createWritable().then(function(w){
+        return w.write(state.lines.join("\n")).then(function(){ return w.close(); });
+      }).then(function(){
+        setStatus("Saved to "+state.fileName+" ✓","ok");
+      }).catch(function(err){ setStatus("Save failed: "+err.message,"err"); });
+    } else {
+      var map={}; state.items.forEach(function(it){ map[it.label]=it.checked; });
+      try{ localStorage.setItem(lsKey(), JSON.stringify(map)); }catch(e){}
+      setStatus("Saved in this browser — click “Download PROGRESS.md” to update the file","warn");
+      show("#downloadBtn", true);
+    }
+  }
+
+  /* ---------- permissions ---------- */
+  function ensurePerm(h){
+    var o={ mode:"readwrite" };
+    return h.queryPermission(o).then(function(p){
+      if(p==="granted") return true;
+      return h.requestPermission(o).then(function(p2){ return p2==="granted"; });
+    });
+  }
+
+  /* ---------- actions ---------- */
+  function linkFile(){
+    window.showOpenFilePicker({
+      types:[{ description:"Markdown", accept:{ "text/markdown":[".md"], "text/plain":[".md",".markdown"] } }]
+    }).then(function(arr){
+      var h=arr[0]; state.handle=h; state.fileName=h.name; state.mode="fsa";
+      return ensurePerm(h).then(function(ok){
+        if(!ok){ setStatus("Permission needed to read/write the file","err"); return; }
+        return idbSet(KEY,h).then(function(){
+          return h.getFile().then(function(f){ return f.text(); }).then(function(t){
+            loadText(t); setStatus("Linked "+h.name+" ✓","ok"); toolbar("linked");
+          });
+        });
+      });
+    }).catch(function(err){ if(err && err.name!=="AbortError") setStatus("Could not link file: "+err.message,"err"); });
+  }
+  function reconnect(){
+    if(!state.handle){ return linkFile(); }
+    ensurePerm(state.handle).then(function(ok){
+      if(!ok){ setStatus("Permission denied","err"); return; }
+      return state.handle.getFile().then(function(f){ return f.text(); }).then(function(t){
+        loadText(t); setStatus("Reconnected "+state.fileName+" ✓","ok"); toolbar("linked");
+      });
+    });
+  }
+  function reload(){
+    if(!state.handle) return;
+    state.handle.getFile().then(function(f){ return f.text(); }).then(function(t){
+      loadText(t); setStatus("Reloaded "+state.fileName,"ok");
+    });
+  }
+  function download(){
+    var blob=new Blob([state.lines.join("\n")], { type:"text/markdown" });
+    var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=state.fileName||"PROGRESS.md";
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+  }
+
+  function toolbar(kind){
+    show("#linkBtn", kind==="link");
+    show("#reconnectBtn", kind==="reconnect");
+    show("#reloadBtn", kind==="linked");
+  }
+
+  /* ---------- init ---------- */
+  function init(){
+    $("#linkBtn").addEventListener("click", linkFile);
+    $("#reconnectBtn").addEventListener("click", reconnect);
+    $("#reloadBtn").addEventListener("click", reload);
+    $("#downloadBtn").addEventListener("click", download);
+    $("#fileInput").addEventListener("change", function(e){
+      var f=e.target.files[0]; if(!f) return;
+      state.fileName=f.name; state.mode="fallback"; state.handle=null;
+      var r=new FileReader();
+      r.onload=function(){ loadText(String(r.result)); setStatus("Loaded "+f.name+" (browser-only saving)","warn"); };
+      r.readAsText(f);
+    });
+
+    if(!hasFSA){
+      setStatus("Your browser can’t save to files directly — use Manual mode below to load PROGRESS.md.","warn");
+      toolbar("none"); return;
+    }
+    idbGet(KEY).then(function(h){
+      if(h){
+        state.handle=h; state.fileName=h.name;
+        return h.queryPermission({ mode:"readwrite" }).then(function(perm){
+          if(perm==="granted"){
+            return h.getFile().then(function(f){ return f.text(); }).then(function(t){
+              loadText(t); setStatus("Linked "+h.name+" ✓","ok"); toolbar("linked");
+            }).catch(function(){ setStatus("Click “Reconnect” to re-link "+h.name,"warn"); toolbar("reconnect"); });
+          }
+          setStatus("Click “Reconnect” to re-link "+h.name,"warn"); toolbar("reconnect");
+        });
+      }
+      setStatus("Link your PROGRESS.md to start tracking.",""); toolbar("link");
+    }).catch(function(){
+      setStatus("Link your PROGRESS.md to start tracking.",""); toolbar("link");
+    });
+  }
+
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", init); }
+  else { init(); }
+})();
+</script>
+</body>
+</html>

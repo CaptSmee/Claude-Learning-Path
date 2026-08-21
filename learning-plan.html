@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Plan · Skills, Agents & Subagents with the Claude SDK (TypeScript)</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-soft: #171a21;
+    --bg-card: #1b1f28;
+    --bg-card-2: #212734;
+    --border: #2b313d;
+    --border-soft: #232833;
+    --text: #e7eaf0;
+    --text-soft: #a5adbb;
+    --text-dim: #737d8c;
+    --accent: #d19a66;
+    --accent-2: #e0b184;
+    --accent-soft: rgba(209,154,102,0.14);
+    --green: #7cc98f;
+    --blue: #7aa2f7;
+    --purple: #bb9af7;
+    --code-bg: #12151b;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f7f9;
+      --bg-soft: #eef0f3;
+      --bg-card: #ffffff;
+      --bg-card-2: #f4f6f9;
+      --border: #e0e3e9;
+      --border-soft: #e8eaef;
+      --text: #1c2027;
+      --text-soft: #4a525f;
+      --text-dim: #8a93a1;
+      --accent: #b4712f;
+      --accent-2: #9a5f24;
+      --accent-soft: rgba(180,113,47,0.10);
+      --green: #2f8f4e;
+      --blue: #3b62c4;
+      --purple: #7c4dd0;
+      --code-bg: #1a1d24;
+      --shadow: 0 1px 2px rgba(20,30,50,0.06), 0 10px 30px rgba(20,30,50,0.08);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 22px 120px; }
+
+  /* Header */
+  header.hero {
+    padding: 60px 22px 40px;
+    background:
+      radial-gradient(1200px 300px at 20% -10%, var(--accent-soft), transparent 60%),
+      linear-gradient(180deg, var(--bg-soft), var(--bg));
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .hero-inner { max-width: 940px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent-2); font-weight: 600; margin-bottom: 16px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 1.5px; background: var(--accent); display: inline-block; }
+  h1 { font-size: 2.15rem; line-height: 1.15; margin: 0 0 14px; letter-spacing: -0.02em; }
+  h1 .grad { color: var(--accent); }
+  .subtitle { font-size: 1.08rem; color: var(--text-soft); max-width: 680px; margin: 0 0 26px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 7px 13px; border-radius: 999px; font-size: 13.5px; color: var(--text-soft);
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  /* Progress */
+  .progress-card {
+    margin-top: 30px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .progress-head span { font-size: 14px; color: var(--text-soft); }
+  .progress-head b { color: var(--accent); font-size: 15px; }
+  .bar { height: 10px; background: var(--bg-card-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--border-soft); }
+  .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width 0.4s ease; }
+  .sync-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .sync-row button { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 7px 13px; border: 1px solid var(--border); background: var(--bg-card-2); color: var(--text); transition: all .15s; }
+  .sync-row button:hover { border-color: var(--accent); }
+  .sync-row button.primary { background: var(--accent); color: #0f1115; border-color: var(--accent); }
+  .sync-status { flex: 1; min-width: 160px; font-size: 12.5px; color: var(--text-dim); }
+  .sync-status.ok { color: var(--green); } .sync-status.err { color: var(--red, #e06c75); } .sync-status.warn { color: var(--accent-2); }
+
+  /* Section headings */
+  h2.section { font-size: 1.5rem; margin: 54px 0 8px; letter-spacing: -0.01em; scroll-margin-top: 20px; }
+  .section-sub { color: var(--text-soft); margin: 0 0 22px; }
+
+  /* Callout */
+  .callout {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px;
+    padding: 16px 18px; margin: 18px 0; color: var(--text-soft); font-size: 15px;
+  }
+  .callout b { color: var(--text); }
+  .callout.blue { border-left-color: var(--blue); }
+  .callout.green { border-left-color: var(--green); }
+
+  /* Two SDK compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  @media (max-width: 680px){ .compare { grid-template-columns: 1fr; } }
+  .compare .col {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+  }
+  .compare .col h4 { margin: 0 0 4px; font-size: 1.02rem; }
+  .compare .col .pkg { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--accent-2); background: var(--accent-soft); padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 12px; }
+  .compare .col p { margin: 0 0 10px; font-size: 14.5px; color: var(--text-soft); }
+  .compare .col ul { margin: 0; padding-left: 18px; color: var(--text-soft); font-size: 14px; }
+  .compare .col li { margin-bottom: 5px; }
+
+  /* Phase cards */
+  .phase {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin: 16px 0; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .phase-header {
+    display: flex; align-items: center; gap: 16px; padding: 20px 22px; cursor: pointer;
+    user-select: none; transition: background 0.15s;
+  }
+  .phase-header:hover { background: var(--bg-card-2); }
+  .wk-badge {
+    flex-shrink: 0; width: 52px; height: 52px; border-radius: 12px;
+    background: var(--accent-soft); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--accent); font-weight: 700;
+  }
+  .wk-badge .lbl { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+  .wk-badge .num { font-size: 20px; line-height: 1; }
+  .phase-title { flex: 1; }
+  .phase-title h3 { margin: 0 0 3px; font-size: 1.16rem; letter-spacing: -0.01em; }
+  .phase-title p { margin: 0; color: var(--text-soft); font-size: 14px; }
+  .phase-meta { display: flex; align-items: center; gap: 14px; }
+  .phase-count { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; }
+  .chevron { color: var(--text-dim); transition: transform 0.25s; flex-shrink: 0; }
+  .phase.open .chevron { transform: rotate(90deg); }
+  .phase-body { display: none; padding: 4px 22px 24px; border-top: 1px solid var(--border-soft); }
+  .phase.open .phase-body { display: block; }
+
+  .block-label {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+    color: var(--accent-2); margin: 22px 0 10px;
+  }
+  .phase-body p { color: var(--text-soft); font-size: 15px; }
+  .phase-body ul { color: var(--text-soft); font-size: 15px; padding-left: 20px; }
+  .phase-body ul li { margin-bottom: 6px; }
+  .phase-body ul li b { color: var(--text); }
+
+  /* Checklist */
+  .check { display: flex; align-items: flex-start; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border-soft); }
+  .check:last-child { border-bottom: none; }
+  .check input { display: none; }
+  .check label { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; width: 100%; color: var(--text-soft); font-size: 14.5px; }
+  .check .box {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border);
+    margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--bg-card-2);
+  }
+  .check .box svg { width: 12px; height: 12px; opacity: 0; transform: scale(0.5); transition: all 0.15s; }
+  .check input:checked + label .box { background: var(--accent); border-color: var(--accent); }
+  .check input:checked + label .box svg { opacity: 1; transform: scale(1); }
+  .check input:checked + label .txt { color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--text-dim); }
+
+  /* Code */
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; overflow-x: auto; margin: 12px 0; font-size: 13px; line-height: 1.6;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre code { color: #d7dbe4; }
+  p code, li code { background: var(--accent-soft); color: var(--accent-2); padding: 1.5px 6px; border-radius: 5px; font-size: 13px; }
+  .tok-c { color: #7a8494; font-style: italic; } /* comment */
+  .tok-k { color: #c39ac9; }  /* keyword */
+  .tok-s { color: #98c379; }  /* string */
+  .tok-f { color: #7aa2f7; }  /* function */
+  .tok-t { color: #e5c07b; }  /* type */
+  .tok-n { color: #d19a66; }  /* number/const */
+
+  /* Resource links */
+  .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  @media (max-width: 680px){ .res-grid { grid-template-columns: 1fr; } }
+  a.res {
+    display: block; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; text-decoration: none; transition: all 0.15s;
+  }
+  a.res:hover { border-color: var(--accent); transform: translateY(-1px); }
+  a.res .rt { color: var(--text); font-weight: 600; font-size: 14.5px; display: block; margin-bottom: 3px; }
+  a.res .rd { color: var(--text-dim); font-size: 12.5px; }
+
+  .inline-link { color: var(--blue); text-decoration: none; border-bottom: 1px solid transparent; }
+  .inline-link:hover { border-bottom-color: var(--blue); }
+
+  /* Glossary */
+  .gloss { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px 20px; }
+  .gloss dt { font-weight: 600; color: var(--text); margin-top: 16px; font-size: 14.5px; }
+  .gloss dt:first-child { margin-top: 8px; }
+  .gloss dd { margin: 4px 0 14px; color: var(--text-soft); font-size: 14px; }
+  .gloss dd code { font-size: 12.5px; }
+
+  footer { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border-soft); }
+
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; }
+  .toc a { font-size: 13px; color: var(--text-soft); background: var(--bg-card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; text-decoration: none; transition: all 0.15s; }
+  .toc a:hover { border-color: var(--accent); color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Structured Learning Plan</div>
+    <h1>Building with <span class="grad">Tools, Skills, Agents &amp; Subagents</span><br>on the Claude SDK — in TypeScript</h1>
+    <p class="subtitle">A seven-week, hands-on path from your first API call to a working multi-agent application. Designed for someone who knows a little JavaScript/TypeScript and wants to learn agents the right way — one concept at a time, each reinforced by something you build.</p>
+    <div class="meta-row">
+      <span class="chip"><span class="dot"></span><b>7 weeks</b> · steady pace</span>
+      <span class="chip"><b>Balanced</b> · read then build</span>
+      <span class="chip">Assumes <b>basic JS/TS</b></span>
+      <span class="chip"><b>~4–6 hrs</b>/week</span>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-head">
+        <span>Your progress</span>
+        <b id="pct">0% complete</b>
+      </div>
+      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="sync-row">
+        <span class="sync-status" id="syncStatus">Checking browser…</span>
+        <button class="primary" id="linkBtn" style="display:none">Link PROGRESS.md</button>
+        <button id="reconnectBtn" style="display:none">Reconnect</button>
+        <button id="reloadBtn" style="display:none">Reload from file</button>
+      </div>
+    </div>
+
+    <div class="toc">
+      <a href="#how">How to use this</a>
+      <a href="#setup">Setup</a>
+      <a href="#two-sdks">The two SDKs</a>
+      <a href="#w1">Wk 1</a>
+      <a href="#w2">Wk 2</a>
+      <a href="#w3">Wk 3</a>
+      <a href="#w4">Wk 4</a>
+      <a href="#w5">Wk 5</a>
+      <a href="#w6">Wk 6</a>
+      <a href="#w7">Wk 7</a>
+      <a href="#glossary">Glossary</a>
+      <a href="#resources">Resources</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HOW TO USE -->
+  <h2 class="section" id="how">How to use this plan</h2>
+  <p class="section-sub">Read this once before you start — it will save you a lot of confusion later.</p>
+  <p>Each week has the same rhythm: a short <b>Learn</b> block that explains the concept, a <b>Build</b> block where you write code, and a <b>Checklist</b> you tick off as you go. The checkboxes drive the progress bar at the top. Tick a box when you have actually done the thing, not just read about it — the whole point of the balanced format is that understanding sticks when you build.</p>
+  <div class="callout">
+    <b>Your progress saves to a file.</b> Open this page from your repo in Chrome or Edge, click <b>Link PROGRESS.md</b> at the top, and pick that file once. From then on every checkbox you tick is written straight into <code>PROGRESS.md</code> and read back when you reopen the page — so your progress is real, versionable in git, and survives refreshes. (Other browsers can still use the checklist; the file-writing step needs Chrome or Edge.)
+  </div>
+  <div class="callout blue">
+    <b>A note on model names and versions.</b> The code below uses current identifiers (for example <code>claude-opus-4-8</code> style model aliases and the Agent SDK package name). Anthropic ships changes often, so if an import or model name ever fails, open the linked official doc for that topic — it is always the source of truth. Every external link in this plan points at Anthropic's own documentation.
+  </div>
+
+  <!-- SETUP -->
+  <h2 class="section" id="setup">One-time setup</h2>
+  <p class="section-sub">Do this before Week 1. It should take under an hour.</p>
+  <ul>
+    <li><b>Install Node.js 20 LTS or newer.</b> Check with <code>node --version</code>. The SDKs require Node 20+.</li>
+    <li><b>Get an API key.</b> Create one in the <a class="inline-link" href="https://console.anthropic.com/" target="_blank" rel="noopener">Claude Console</a>, then add a little credit. Learning agents costs real (small) money because every tool call is an API call — budgeting a few dollars is plenty for this whole plan.</li>
+    <li><b>Store the key safely.</b> Put it in an environment variable named <code>ANTHROPIC_API_KEY</code>. Never commit it to git. Both SDKs read this variable automatically.</li>
+    <li><b>Create a practice repo.</b> One folder, <code>git init</code>, a <code>.gitignore</code> with <code>node_modules</code> and <code>.env</code> in it. You'll add a subfolder per week.</li>
+  </ul>
+  <div class="callout green" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:240px;">
+      <b>Want to skip the typing?</b> Download the ready-made starter repo — the same scaffold described below, with a runnable <code>week1/hello.ts</code>, all seven week folders, <code>package.json</code>, <code>tsconfig.json</code>, <code>.env.example</code>, and a <code>PROGRESS.md</code> tracker. Unzip it, then jump straight to installing dependencies.
+    </div>
+    <a href="data:application/zip;base64,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" download="claude-agents-course.zip" style="flex-shrink:0;background:var(--accent);color:#0f1115;font-weight:600;padding:13px 20px;border-radius:10px;text-decoration:none;white-space:nowrap;box-shadow:var(--shadow);">&#11015; Download starter repo (.zip)</a>
+  </div>
+  <div class="block-label">Starter TypeScript project</div>
+<pre><code><span class="tok-c"># create and enter your learning repo</span>
+mkdir claude-agents-course &amp;&amp; cd claude-agents-course
+npm init -y
+npm install typescript tsx @types/node --save-dev
+npx tsc --init
+
+<span class="tok-c"># store your key for the current shell session</span>
+export ANTHROPIC_API_KEY=<span class="tok-s">"sk-ant-..."</span>
+
+<span class="tok-c"># you'll run each week's script like this:</span>
+npx tsx week1/hello.ts</code></pre>
+  <div class="callout green"><b>Why <code>tsx</code>?</b> It runs TypeScript files directly with no build step, which keeps you focused on learning agents rather than fighting your toolchain. For a real production app you'd compile with <code>tsc</code> or a bundler, but that's a Week 7 concern.</div>
+
+  <div class="block-label">Version control &amp; push to GitHub</div>
+  <p>The scaffold is ready to become its own repository — it already includes a <code>.gitignore</code> that excludes <code>node_modules/</code>, <code>dist/</code>, and <code>.env</code>, so your API key never enters git history. Run these <b>inside</b> the <code>claude-agents-course</code> folder, not its parent:</p>
+<pre><code><span class="tok-c"># from inside claude-agents-course/</span>
+git init
+git add .
+git commit -m <span class="tok-s">"Initial scaffold"</span></code></pre>
+  <p>Run <code>git status</code> afterward to confirm you see the week folders and config files — but <em>not</em> <code>.env</code> or <code>node_modules/</code>. Then pick one way to get it onto GitHub.</p>
+
+  <p><b>Option A — GitHub CLI (fewest steps).</b> The <code>gh</code> tool creates the remote repo and pushes in a single command. Install it if you don't have it (<code>winget install GitHub.CLI</code> on Windows, <code>brew install gh</code> on macOS), sign in once, then run both commands:</p>
+<pre><code><span class="tok-c"># one-time sign-in</span>
+gh auth login
+<span class="tok-c"># create the GitHub repo, wire up "origin", and push — all at once</span>
+<span class="tok-c"># (drop --private for a public repo)</span>
+gh repo create claude-agents-course --private --source=. --remote=origin --push</code></pre>
+
+  <p><b>Option B — the github.com website.</b> Create a new <em>empty</em> repository on GitHub — don't let it add a README or .gitignore, which would cause a merge conflict on your first push — then connect it and push:</p>
+<pre><code>git remote add origin https://github.com/YOUR-USERNAME/claude-agents-course.git
+git branch -M main
+git push -u origin main</code></pre>
+  <div class="callout blue"><b>The push runs in your own terminal.</b> Pushing needs network access to GitHub, so it's a command you run locally — not something the in-session tools can do for you. The local steps (<code>git init</code>, <code>add</code>, <code>commit</code>) are all offline and safe to run anytime.</div>
+
+  <!-- TWO SDKS -->
+  <h2 class="section" id="two-sdks">The single most important thing to understand first</h2>
+  <p class="section-sub">There are <b>two different SDKs</b>, and knowing which is which prevents 90% of beginner confusion.</p>
+  <div class="compare">
+    <div class="col">
+      <h4>Client SDK</h4>
+      <span class="pkg">@anthropic-ai/sdk</span>
+      <p>The low-level library that talks to the Messages API. You send messages, you get a response. If you want tools, <b>you</b> write the loop that runs them and feeds results back.</p>
+      <ul>
+        <li>Maximum control, minimum magic</li>
+        <li>You implement the "agent loop" by hand</li>
+        <li>Best for <b>learning how agents actually work</b></li>
+        <li>Weeks 1–2 live here</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>Agent SDK</h4>
+      <span class="pkg">@anthropic-ai/claude-agent-sdk</span>
+      <p>The high-level library that runs the full agent loop for you — the same engine that powers Claude Code. Built-in tools, permissions, subagents, and skills all come included.</p>
+      <ul>
+        <li>The loop, tools, and context management are done for you</li>
+        <li>Where <b>tools, skills, and subagents</b> officially live</li>
+        <li>Best for <b>building real agents</b></li>
+        <li>Weeks 3–7 live here</li>
+      </ul>
+    </div>
+  </div>
+  <p>The plan deliberately starts with the Client SDK for two weeks. Building one tool loop by hand — even a clumsy one — is the fastest way to truly understand what the Agent SDK is doing for you. After that, you switch to the Agent SDK and never look back.</p>
+
+  <!-- WEEK 1 -->
+  <div class="phase" id="w1">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">1</span></div>
+      <div class="phase-title">
+        <h3>Foundations &amp; your first Claude call</h3>
+        <p>Get comfortable talking to the model with the Client SDK.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/5</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>Understand the shape of a request to Claude: a <b>model</b>, a <b>max_tokens</b> budget, and a list of <b>messages</b> with roles (<code>user</code> / <code>assistant</code>). The response comes back as an array of <b>content blocks</b> — for now they'll all be <code>text</code>, but this block structure is exactly what makes tools and thinking possible later. Read about the message structure and streaming; don't skip streaming, since agents feel unusable without it.</p>
+      <div class="block-label">Build — a talking script</div>
+      <p>Create <code>week1/hello.ts</code>. Make a single call, print the text, then upgrade it to stream token-by-token.</p>
+<pre><code><span class="tok-k">import</span> Anthropic <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/sdk"</span>;
+
+<span class="tok-k">const</span> client = <span class="tok-k">new</span> <span class="tok-f">Anthropic</span>(); <span class="tok-c">// reads ANTHROPIC_API_KEY from the env</span>
+
+<span class="tok-k">const</span> message = <span class="tok-k">await</span> client.messages.<span class="tok-f">create</span>({
+  model: <span class="tok-s">"claude-opus-4-8"</span>,
+  max_tokens: <span class="tok-n">1024</span>,
+  messages: [{ role: <span class="tok-s">"user"</span>, content: <span class="tok-s">"Explain what an AI agent is in 3 sentences."</span> }],
+});
+
+<span class="tok-k">for</span> (<span class="tok-k">const</span> block <span class="tok-k">of</span> message.content) {
+  <span class="tok-k">if</span> (block.type === <span class="tok-s">"text"</span>) <span class="tok-f">console</span>.log(block.text);
+}</code></pre>
+      <p>Then swap in the streaming helper and watch the difference:</p>
+<pre><code><span class="tok-k">const</span> stream = client.messages
+  .<span class="tok-f">stream</span>({
+    model: <span class="tok-s">"claude-opus-4-8"</span>,
+    max_tokens: <span class="tok-n">1024</span>,
+    messages: [{ role: <span class="tok-s">"user"</span>, content: <span class="tok-s">"Say hello, one word at a time."</span> }],
+  })
+  .<span class="tok-f">on</span>(<span class="tok-s">"text"</span>, (text) =&gt; process.stdout.<span class="tok-f">write</span>(text));
+
+<span class="tok-k">await</span> stream.<span class="tok-f">finalMessage</span>();</code></pre>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w1c1"><label for="w1c1"><span class="box">✓svg</span><span class="txt">Installed <code>@anthropic-ai/sdk</code> and confirmed the key is set</span></label></div>
+        <div class="check"><input type="checkbox" id="w1c2"><label for="w1c2"><span class="box">✓svg</span><span class="txt">Made a first <code>messages.create</code> call and printed the text</span></label></div>
+        <div class="check"><input type="checkbox" id="w1c3"><label for="w1c3"><span class="box">✓svg</span><span class="txt">Rewrote it to stream with <code>.stream().on("text", ...)</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w1c4"><label for="w1c4"><span class="box">✓svg</span><span class="txt">Held a multi-turn conversation by appending assistant + user messages to the array</span></label></div>
+        <div class="check"><input type="checkbox" id="w1c5"><label for="w1c5"><span class="box">✓svg</span><span class="txt">Can explain, in my own words, what a "content block" is</span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/typescript" target="_blank" rel="noopener"><span class="rt">TypeScript Client SDK</span><span class="rd">platform.claude.com · install &amp; first call</span></a>
+        <a class="res" href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener"><span class="rt">Messages API reference</span><span class="rd">platform.claude.com · request/response shape</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 2 -->
+  <div class="phase" id="w2">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">2</span></div>
+      <div class="phase-title">
+        <h3>Tool use — build the agent loop by hand</h3>
+        <p>The core idea behind every agent, written out yourself once.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/5</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>An "agent" is mostly one loop: you give the model a set of <b>tools</b> (name + description + JSON input schema); the model replies with a <code>tool_use</code> block asking you to run one; your code runs it and sends the answer back as a <code>tool_result</code>; you repeat until the model stops asking for tools and gives a final answer. That's the whole trick. Learn to recognize <code>stop_reason: "tool_use"</code> — it's the signal to run a tool and loop again.</p>
+      <div class="block-label">Build — a weather-ish agent</div>
+      <p>Create <code>week2/tool-loop.ts</code>. Define one fake tool, then write the loop that services it. Keep the "tool" a hardcoded function for now — the point is the loop, not the data.</p>
+<pre><code><span class="tok-k">import</span> Anthropic <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/sdk"</span>;
+<span class="tok-k">const</span> client = <span class="tok-k">new</span> <span class="tok-f">Anthropic</span>();
+
+<span class="tok-k">const</span> tools = [{
+  name: <span class="tok-s">"get_weather"</span>,
+  description: <span class="tok-s">"Get the current temperature for a city."</span>,
+  input_schema: {
+    type: <span class="tok-s">"object"</span>,
+    properties: { city: { type: <span class="tok-s">"string"</span> } },
+    required: [<span class="tok-s">"city"</span>],
+  },
+}];
+
+<span class="tok-c">// your real "tool" — just a function</span>
+<span class="tok-k">function</span> <span class="tok-f">getWeather</span>(city: <span class="tok-t">string</span>) {
+  <span class="tok-k">return</span> `It is 21°C and sunny in ${city}.`;
+}
+
+<span class="tok-k">const</span> messages: Anthropic.MessageParam[] = [
+  { role: <span class="tok-s">"user"</span>, content: <span class="tok-s">"What's the weather in Lisbon?"</span> },
+];
+
+<span class="tok-c">// the agent loop</span>
+<span class="tok-k">while</span> (<span class="tok-n">true</span>) {
+  <span class="tok-k">const</span> res = <span class="tok-k">await</span> client.messages.<span class="tok-f">create</span>({
+    model: <span class="tok-s">"claude-opus-4-8"</span>,
+    max_tokens: <span class="tok-n">1024</span>,
+    tools,
+    messages,
+  });
+  messages.<span class="tok-f">push</span>({ role: <span class="tok-s">"assistant"</span>, content: res.content });
+
+  <span class="tok-k">if</span> (res.stop_reason !== <span class="tok-s">"tool_use"</span>) {
+    <span class="tok-k">const</span> text = res.content.<span class="tok-f">find</span>((b) =&gt; b.type === <span class="tok-s">"text"</span>);
+    <span class="tok-k">if</span> (text &amp;&amp; text.type === <span class="tok-s">"text"</span>) <span class="tok-f">console</span>.log(text.text);
+    <span class="tok-k">break</span>; <span class="tok-c">// model is done</span>
+  }
+
+  <span class="tok-c">// run every tool the model asked for, collect results</span>
+  <span class="tok-k">const</span> results: Anthropic.ToolResultBlockParam[] = [];
+  <span class="tok-k">for</span> (<span class="tok-k">const</span> block <span class="tok-k">of</span> res.content) {
+    <span class="tok-k">if</span> (block.type === <span class="tok-s">"tool_use"</span> &amp;&amp; block.name === <span class="tok-s">"get_weather"</span>) {
+      <span class="tok-k">const</span> { city } = block.input <span class="tok-k">as</span> { city: <span class="tok-t">string</span> };
+      results.<span class="tok-f">push</span>({
+        type: <span class="tok-s">"tool_result"</span>,
+        tool_use_id: block.id,
+        content: <span class="tok-f">getWeather</span>(city),
+      });
+    }
+  }
+  messages.<span class="tok-f">push</span>({ role: <span class="tok-s">"user"</span>, content: results });
+}</code></pre>
+      <div class="callout"><b>Payoff moment.</b> Once this runs, you have written, from scratch, the exact pattern the Agent SDK automates. Everything in Weeks 3–7 is a more capable version of this loop. Keep this file — you'll appreciate it later.</div>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w2c1"><label for="w2c1"><span class="box">✓svg</span><span class="txt">Defined a tool with name, description, and <code>input_schema</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w2c2"><label for="w2c2"><span class="box">✓svg</span><span class="txt">Detected <code>stop_reason: "tool_use"</code> and looped</span></label></div>
+        <div class="check"><input type="checkbox" id="w2c3"><label for="w2c3"><span class="box">✓svg</span><span class="txt">Sent a <code>tool_result</code> back with the matching <code>tool_use_id</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w2c4"><label for="w2c4"><span class="box">✓svg</span><span class="txt">Added a second tool and let the model choose between them</span></label></div>
+        <div class="check"><input type="checkbox" id="w2c5"><label for="w2c5"><span class="box">✓svg</span><span class="txt">Can explain why the loop needs to run more than once</span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/tool-use/overview" target="_blank" rel="noopener"><span class="rt">Tool use overview</span><span class="rd">platform.claude.com · the tool loop explained</span></a>
+        <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/tool-use/implement-tool-use" target="_blank" rel="noopener"><span class="rt">Implementing tool use</span><span class="rd">platform.claude.com · schemas &amp; results</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 3 -->
+  <div class="phase" id="w3">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">3</span></div>
+      <div class="phase-title">
+        <h3>The Agent SDK — let the loop run itself</h3>
+        <p>Switch to the high-level SDK and define your own tools cleanly.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/6</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>Now install <code>@anthropic-ai/claude-agent-sdk</code>. The entire loop you wrote by hand becomes a single <code>query()</code> call that returns an async stream of messages. You get built-in tools (reading and writing files, running commands, web search) for free, and you define <b>your own</b> tools with the <code>tool()</code> helper — which uses <a class="inline-link" href="https://zod.dev" target="_blank" rel="noopener">Zod</a> schemas so your inputs are type-safe — bundled into an in-process server via <code>createSdkMcpServer()</code>. Learn the key options: <code>systemPrompt</code>, <code>allowedTools</code> (auto-approve tools so they don't prompt), <code>mcpServers</code>, <code>maxTurns</code>, and <code>permissionMode</code>.</p>
+      <div class="block-label">Build — the same idea, one tenth the code</div>
+<pre><code><span class="tok-k">import</span> { query, tool, createSdkMcpServer } <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/claude-agent-sdk"</span>;
+<span class="tok-k">import</span> { z } <span class="tok-k">from</span> <span class="tok-s">"zod"</span>;
+
+<span class="tok-c">// define a custom tool, type-safe via Zod</span>
+<span class="tok-k">const</span> weather = <span class="tok-f">tool</span>(
+  <span class="tok-s">"get_weather"</span>,
+  <span class="tok-s">"Get the current temperature for a city."</span>,
+  { city: z.<span class="tok-f">string</span>() },
+  <span class="tok-k">async</span> ({ city }) =&gt; ({
+    content: [{ type: <span class="tok-s">"text"</span>, text: `It is 21°C and sunny in ${city}.` }],
+  })
+);
+
+<span class="tok-k">const</span> myTools = <span class="tok-f">createSdkMcpServer</span>({
+  name: <span class="tok-s">"my-tools"</span>,
+  tools: [weather],
+});
+
+<span class="tok-k">for</span> <span class="tok-k">await</span> (<span class="tok-k">const</span> msg <span class="tok-k">of</span> <span class="tok-f">query</span>({
+  prompt: <span class="tok-s">"What's the weather in Lisbon, and save it to weather.txt?"</span>,
+  options: {
+    model: <span class="tok-s">"claude-opus-4-8"</span>,
+    mcpServers: { <span class="tok-s">"my-tools"</span>: myTools },
+    allowedTools: [<span class="tok-s">"mcp__my-tools__get_weather"</span>, <span class="tok-s">"Write"</span>],
+    maxTurns: <span class="tok-n">6</span>,
+  },
+})) {
+  <span class="tok-k">if</span> (<span class="tok-s">"result"</span> <span class="tok-k">in</span> msg) <span class="tok-f">console</span>.log(msg.result);
+}</code></pre>
+      <div class="callout blue"><b>Notice what you did <em>not</em> write:</b> no loop, no <code>stop_reason</code> check, no manual <code>tool_result</code> plumbing, and the model could also use the built-in <code>Write</code> tool to create a file — all from one prompt. That's the Agent SDK earning its keep.</div>
+      <p>You've now met tools from both sides: hand-rolled last week, and a clean custom <code>tool()</code> here. Next week is a dedicated deep-dive on the full tool landscape — the built-in catalog, connecting external MCP servers, and how to control exactly what an agent is allowed to touch.</p>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w3c1"><label for="w3c1"><span class="box">✓svg</span><span class="txt">Installed <code>@anthropic-ai/claude-agent-sdk</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w3c2"><label for="w3c2"><span class="box">✓svg</span><span class="txt">Ran a first <code>query()</code> and iterated its streamed messages</span></label></div>
+        <div class="check"><input type="checkbox" id="w3c3"><label for="w3c3"><span class="box">✓svg</span><span class="txt">Defined a custom tool with <code>tool()</code> + a Zod schema</span></label></div>
+        <div class="check"><input type="checkbox" id="w3c4"><label for="w3c4"><span class="box">✓svg</span><span class="txt">Registered it with <code>createSdkMcpServer()</code> and <code>allowedTools</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w3c5"><label for="w3c5"><span class="box">✓svg</span><span class="txt">Let the agent use a built-in tool (<code>Read</code>/<code>Write</code>/<code>Bash</code>)</span></label></div>
+        <div class="check"><input type="checkbox" id="w3c6"><label for="w3c6"><span class="box">✓svg</span><span class="txt">Experimented with <code>systemPrompt</code> and <code>permissionMode</code></span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/overview" target="_blank" rel="noopener"><span class="rt">Agent SDK overview</span><span class="rd">code.claude.com · what it is &amp; when to use it</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/typescript" target="_blank" rel="noopener"><span class="rt">TypeScript Agent SDK reference</span><span class="rd">code.claude.com · query, tool, options</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" rel="noopener"><span class="rt">The agent loop</span><span class="rd">code.claude.com · how it plans &amp; stops</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/mcp" target="_blank" rel="noopener"><span class="rt">MCP &amp; custom tools</span><span class="rd">code.claude.com · connecting tools</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 4 · TOOLS (dedicated deep-dive) -->
+  <div class="phase" id="w4">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">4</span></div>
+      <div class="phase-title">
+        <h3>Tools in depth — the agent's hands</h3>
+        <p>The three sources of tools, how to design them, and how to control what an agent can touch.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/7</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>You've met tools twice already — hand-rolled in Week 2, and a clean custom <code>tool()</code> in Week 3. This week zooms out to the whole picture. In the Agent SDK, an agent's tools come from <b>three places</b>, and knowing the distinction is what lets you assemble capable agents deliberately instead of by luck:</p>
+      <ul>
+        <li><b>Built-in tools</b> — ship with the SDK; the same ones that power Claude Code. File operations (<code>Read</code>, <code>Write</code>, <code>Edit</code>), a shell (<code>Bash</code>), search (<code>Glob</code>, <code>Grep</code>), the web (<code>WebSearch</code>, <code>WebFetch</code>), notebooks (<code>NotebookEdit</code>), and orchestration tools you'll meet soon (<code>Agent</code> for subagents, <code>Skill</code>, <code>TodoWrite</code>). You get these for free — you just decide which to allow.</li>
+        <li><b>Custom tools</b> — your own functions, defined with <code>tool()</code> + a Zod schema and bundled with <code>createSdkMcpServer()</code>. They run <em>in-process</em>, so they never leave your app or touch the network unless your code does.</li>
+        <li><b>External MCP servers</b> — third-party (or your own) servers that expose tools over <b>stdio</b> (a local command) or <b>HTTP</b>. This is how you connect a database, GitHub, Slack, or a filesystem without writing the integration yourself.</li>
+      </ul>
+      <p><b>Naming &amp; permission is the other half of the story.</b> Every tool from an MCP server — custom or external — is namespaced <code>mcp__&lt;server&gt;__&lt;tool&gt;</code>. Nothing runs unless you allow it: <code>allowedTools</code> auto-approves (wildcards like <code>mcp__github__*</code> work), <code>disallowedTools</code> removes tools, <code>permissionMode</code> sets the default posture, and a <code>canUseTool</code> callback lets you decide per call at runtime. This is your safety dial — a read-only research agent simply never gets <code>Write</code> or <code>Bash</code>.</p>
+      <p><b>What makes a tool actually get used?</b> Its <code>description</code> is a prompt aimed at the model — vague descriptions are the number-one reason a tool sits unused. Validate inputs with Zod, return clear structured content, and handle failure by returning a helpful message rather than throwing. And when you need to <em>force</em> the model's hand (say, for structured extraction), the Client SDK's <code>tool_choice</code> lets you require any tool (<code>{ type: "any" }</code>), a specific one (<code>{ type: "tool", name }</code>), or leave it automatic.</p>
+
+      <div class="block-label">Build 1 — drive the built-in tools</div>
+      <p>Give an Agent SDK query a small scoped toolset and a task that needs several tools, then watch which it reaches for.</p>
+<pre><code><span class="tok-k">import</span> { query } <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/claude-agent-sdk"</span>;
+
+<span class="tok-k">for</span> <span class="tok-k">await</span> (<span class="tok-k">const</span> msg <span class="tok-k">of</span> <span class="tok-f">query</span>({
+  prompt: <span class="tok-s">"Find every TODO comment in this folder, then write them to todos.md."</span>,
+  options: {
+    <span class="tok-c">// built-in tools, scoped deliberately — no Bash, no network</span>
+    allowedTools: [<span class="tok-s">"Glob"</span>, <span class="tok-s">"Grep"</span>, <span class="tok-s">"Read"</span>, <span class="tok-s">"Write"</span>],
+    maxTurns: <span class="tok-n">8</span>,
+  },
+})) {
+  <span class="tok-c">// peek at which tools the agent actually calls</span>
+  <span class="tok-k">if</span> (msg.type === <span class="tok-s">"assistant"</span>) {
+    <span class="tok-k">for</span> (<span class="tok-k">const</span> block <span class="tok-k">of</span> msg.message.content) {
+      <span class="tok-k">if</span> (block.type === <span class="tok-s">"tool_use"</span>) <span class="tok-f">console</span>.log(<span class="tok-s">"→ used"</span>, block.name);
+    }
+  }
+  <span class="tok-k">if</span> (<span class="tok-s">"result"</span> <span class="tok-k">in</span> msg) <span class="tok-f">console</span>.log(msg.result);
+}</code></pre>
+
+      <div class="block-label">Build 2 — a well-designed custom tool</div>
+      <p>Note the specific description, the validated input, and the graceful error return instead of a throw.</p>
+<pre><code><span class="tok-k">import</span> { tool } <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/claude-agent-sdk"</span>;
+<span class="tok-k">import</span> { z } <span class="tok-k">from</span> <span class="tok-s">"zod"</span>;
+
+<span class="tok-k">const</span> convertCurrency = <span class="tok-f">tool</span>(
+  <span class="tok-s">"convert_currency"</span>,
+  <span class="tok-c">// a description written FOR the model — say exactly when to use it</span>
+  <span class="tok-s">"Convert an amount from one ISO currency code to another. Use whenever the user asks to convert money between currencies."</span>,
+  {
+    amount: z.<span class="tok-f">number</span>().<span class="tok-f">positive</span>(),
+    from: z.<span class="tok-f">string</span>().<span class="tok-f">length</span>(<span class="tok-n">3</span>),
+    to: z.<span class="tok-f">string</span>().<span class="tok-f">length</span>(<span class="tok-n">3</span>),
+  },
+  <span class="tok-k">async</span> ({ amount, from, to }) =&gt; {
+    <span class="tok-k">const</span> rate = <span class="tok-k">await</span> <span class="tok-f">lookupRate</span>(from, to); <span class="tok-c">// your logic</span>
+    <span class="tok-k">if</span> (rate == <span class="tok-n">null</span>) {
+      <span class="tok-c">// return a helpful message; don't throw — the model can recover</span>
+      <span class="tok-k">return</span> { content: [{ type: <span class="tok-s">"text"</span>, text: `No rate for ${from}→${to}.` }], isError: <span class="tok-n">true</span> };
+    }
+    <span class="tok-k">return</span> { content: [{ type: <span class="tok-s">"text"</span>, text: `${amount} ${from} = ${(amount * rate).<span class="tok-f">toFixed</span>(<span class="tok-n">2</span>)} ${to}` }] };
+  }
+);</code></pre>
+
+      <div class="block-label">Build 3 — connect an external MCP server</div>
+      <p>Wire up a real MCP server over stdio and allow its tools with a wildcard. The filesystem server is a friendly first one.</p>
+<pre><code><span class="tok-k">import</span> { query } <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/claude-agent-sdk"</span>;
+
+<span class="tok-k">for</span> <span class="tok-k">await</span> (<span class="tok-k">const</span> msg <span class="tok-k">of</span> <span class="tok-f">query</span>({
+  prompt: <span class="tok-s">"List the files in my project and summarize what it does."</span>,
+  options: {
+    mcpServers: {
+      filesystem: {
+        <span class="tok-c">// stdio: a local command the SDK launches for you</span>
+        command: <span class="tok-s">"npx"</span>,
+        args: [<span class="tok-s">"-y"</span>, <span class="tok-s">"@modelcontextprotocol/server-filesystem"</span>, process.<span class="tok-f">cwd</span>()],
+      },
+    },
+    <span class="tok-c">// wildcard grants every tool from that one server, nothing else</span>
+    allowedTools: [<span class="tok-s">"mcp__filesystem__*"</span>],
+  },
+})) {
+  <span class="tok-k">if</span> (msg.type === <span class="tok-s">"system"</span> &amp;&amp; msg.subtype === <span class="tok-s">"init"</span>) {
+    <span class="tok-f">console</span>.log(<span class="tok-s">"tools:"</span>, msg.tools.<span class="tok-f">filter</span>((t) =&gt; t.<span class="tok-f">startsWith</span>(<span class="tok-s">"mcp__"</span>)));
+  }
+  <span class="tok-k">if</span> (<span class="tok-s">"result"</span> <span class="tok-k">in</span> msg) <span class="tok-f">console</span>.log(msg.result);
+}</code></pre>
+      <div class="callout blue"><b>HTTP servers work the same way</b> — swap the <code>command</code>/<code>args</code> for <code>{ type: "http", url, headers }</code> and pass secrets via <code>headers</code> or the stdio <code>env</code> field. Remember: MCP tools stay invisible to the model until you list them in <code>allowedTools</code>. "Claude sees the tool but won't call it" almost always means you forgot the allow entry.</div>
+
+      <div class="block-label">Build 4 — force a tool with tool_choice (Client SDK)</div>
+      <p>Back on the low-level SDK for one exercise: make the model call a specific tool every time — the trick behind reliable structured extraction.</p>
+<pre><code><span class="tok-k">const</span> res = <span class="tok-k">await</span> client.messages.<span class="tok-f">create</span>({
+  model: <span class="tok-s">"claude-opus-4-8"</span>,
+  max_tokens: <span class="tok-n">1024</span>,
+  tools: [extractContact], <span class="tok-c">// a tool whose schema IS your output shape</span>
+  tool_choice: { type: <span class="tok-s">"tool"</span>, name: <span class="tok-s">"extractContact"</span> }, <span class="tok-c">// force it</span>
+  messages: [{ role: <span class="tok-s">"user"</span>, content: <span class="tok-s">"Reach me at sam@acme.io or 555-0140."</span> }],
+});</code></pre>
+
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w4c1"><label for="w4c1"><span class="box">✓svg</span><span class="txt">Can name the three sources of tools (built-in, custom, external MCP)</span></label></div>
+        <div class="check"><input type="checkbox" id="w4c2"><label for="w4c2"><span class="box">✓svg</span><span class="txt">Ran a query with scoped built-in tools and logged which ones the agent called</span></label></div>
+        <div class="check"><input type="checkbox" id="w4c3"><label for="w4c3"><span class="box">✓svg</span><span class="txt">Wrote a custom tool with Zod validation and a graceful error return</span></label></div>
+        <div class="check"><input type="checkbox" id="w4c4"><label for="w4c4"><span class="box">✓svg</span><span class="txt">Connected an external MCP server (stdio) and allowed it with <code>mcp__server__*</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w4c5"><label for="w4c5"><span class="box">✓svg</span><span class="txt">Understand the <code>mcp__server__tool</code> naming and scoped access with <code>allowedTools</code>/<code>disallowedTools</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w4c6"><label for="w4c6"><span class="box">✓svg</span><span class="txt">Forced a specific tool with <code>tool_choice</code> in the Client SDK</span></label></div>
+        <div class="check"><input type="checkbox" id="w4c7"><label for="w4c7"><span class="box">✓svg</span><span class="txt">Can explain why a tool's <code>description</code> quality decides whether it gets used</span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://code.claude.com/docs/en/tools-reference" target="_blank" rel="noopener"><span class="rt">Tools reference</span><span class="rd">code.claude.com · every built-in tool</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/mcp" target="_blank" rel="noopener"><span class="rt">Connect external tools with MCP</span><span class="rd">code.claude.com · stdio/HTTP servers</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/custom-tools" target="_blank" rel="noopener"><span class="rt">Custom tools guide</span><span class="rd">code.claude.com · tool() + in-process servers</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/permissions" target="_blank" rel="noopener"><span class="rt">Permissions</span><span class="rd">code.claude.com · allowedTools, permissionMode</span></a>
+        <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/tool-use/implement-tool-use" target="_blank" rel="noopener"><span class="rt">tool_choice &amp; tool use</span><span class="rd">platform.claude.com · forcing tools</span></a>
+        <a class="res" href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener"><span class="rt">MCP server directory</span><span class="rd">github.com · ready-made servers</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 5 -->
+  <div class="phase" id="w5">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">5</span></div>
+      <div class="phase-title">
+        <h3>Skills — packaged expertise Claude loads on demand</h3>
+        <p>Use Anthropic's skills, then write your own.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/6</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>A <b>Skill</b> is a folder of instructions (and optionally scripts and resources) that teaches Claude how to do a specific kind of task well — like building a spreadsheet or a slide deck. At its heart is a <code>SKILL.md</code> file with YAML frontmatter: a <code>name</code>, a <code>description</code> (this is what Claude reads to decide <em>when</em> the skill is relevant), and an optional <code>display_title</code>. The magic is <b>progressive disclosure</b>: Claude only pulls the full skill into context when the description matches the task, so you can attach many skills cheaply.</p>
+      <p>There are two ways to use skills, and it's worth understanding both:</p>
+      <ul>
+        <li><b>Via the Messages API (Client SDK):</b> upload your skill folder as a zip with <code>client.beta.skills.create()</code>, then reference it in the <code>container.skills</code> array. Skills run inside the <b>code execution</b> tool, so you must enable that tool and pass two beta headers: <code>code-execution-2025-08-25</code> and <code>skills-2025-10-02</code>.</li>
+        <li><b>Via the Agent SDK:</b> skills load from your project's <code>.claude/skills/</code> folder. Set the <code>skills</code> option on <code>query()</code> to <code>"all"</code> (or a list of names) to enable them, and make sure <code>settingSources</code> includes <code>"project"</code>/<code>"user"</code> — the most common "my skill isn't loading" bug is forgetting this. A subagent can also preload specific skills through its <code>skills</code> field. Simpler for local development.</li>
+      </ul>
+      <div class="block-label">Build — write a tiny skill, then invoke it</div>
+      <p>First, the anatomy of the smallest possible skill. Create <code>skills/commit-style/SKILL.md</code>:</p>
+<pre><code><span class="tok-c">---
+name: commit-style
+description: Writes git commit messages in our house style —
+  imperative mood, under 50 chars, no trailing period. Use whenever
+  the user asks for a commit message.
+---</span>
+
+<span class="tok-c"># Commit message style</span>
+
+Always use the imperative mood: "Add", "Fix", "Remove".
+Keep the subject line under 50 characters.
+No period at the end of the subject line.
+Leave a blank line before any body text.</code></pre>
+      <p>Then use a prebuilt Anthropic skill through the Messages API to see the container + beta-header pattern in action:</p>
+<pre><code><span class="tok-k">import</span> Anthropic <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/sdk"</span>;
+<span class="tok-k">const</span> client = <span class="tok-k">new</span> <span class="tok-f">Anthropic</span>();
+
+<span class="tok-k">const</span> res = <span class="tok-k">await</span> client.beta.messages.<span class="tok-f">create</span>({
+  model: <span class="tok-s">"claude-opus-4-8"</span>,
+  max_tokens: <span class="tok-n">4096</span>,
+  betas: [<span class="tok-s">"code-execution-2025-08-25"</span>, <span class="tok-s">"skills-2025-10-02"</span>],
+  container: {
+    skills: [{ type: <span class="tok-s">"anthropic"</span>, skill_id: <span class="tok-s">"xlsx"</span>, version: <span class="tok-s">"latest"</span> }],
+  },
+  tools: [{ type: <span class="tok-s">"code_execution_20250825"</span>, name: <span class="tok-s">"code_execution"</span> }],
+  messages: [{ role: <span class="tok-s">"user"</span>, content: <span class="tok-s">"Make a 3-row budget spreadsheet."</span> }],
+});
+<span class="tok-f">console</span>.log(res.content);</code></pre>
+      <div class="callout"><b>Watch the boundaries.</b> Skills that run via the API execute in an isolated container with <b>no network access</b> and only pre-installed packages. That's a safety feature, not a bug — plan skills to be self-contained. A skill folder must stay under 30&nbsp;MB uncompressed and its top-level folder name must match the <code>name</code> in <code>SKILL.md</code>.</div>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w5c1"><label for="w5c1"><span class="box">✓svg</span><span class="txt">Can explain what <code>SKILL.md</code> frontmatter does and why <code>description</code> matters</span></label></div>
+        <div class="check"><input type="checkbox" id="w5c2"><label for="w5c2"><span class="box">✓svg</span><span class="txt">Wrote my own minimal skill folder</span></label></div>
+        <div class="check"><input type="checkbox" id="w5c3"><label for="w5c3"><span class="box">✓svg</span><span class="txt">Called a prebuilt Anthropic skill (e.g. <code>xlsx</code>) with the two beta headers</span></label></div>
+        <div class="check"><input type="checkbox" id="w5c4"><label for="w5c4"><span class="box">✓svg</span><span class="txt">Enabled the <code>code_execution</code> tool alongside the skill</span></label></div>
+        <div class="check"><input type="checkbox" id="w5c5"><label for="w5c5"><span class="box">✓svg</span><span class="txt">Uploaded a custom skill with <code>client.beta.skills.create()</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w5c6"><label for="w5c6"><span class="box">✓svg</span><span class="txt">Loaded a skill from <code>.claude/skills/</code> in an Agent SDK <code>query()</code></span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener"><span class="rt">Agent Skills overview</span><span class="rd">platform.claude.com · concepts</span></a>
+        <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/skills-guide" target="_blank" rel="noopener"><span class="rt">Using Skills with the API</span><span class="rd">platform.claude.com · upload, container, headers</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/skills" target="_blank" rel="noopener"><span class="rt">Skills in the Agent SDK</span><span class="rd">code.claude.com · loading from .claude/</span></a>
+        <a class="res" href="https://github.com/anthropics/skills" target="_blank" rel="noopener"><span class="rt">anthropics/skills (examples)</span><span class="rd">github.com · read real skills</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 6 -->
+  <div class="phase" id="w6">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">6</span></div>
+      <div class="phase-title">
+        <h3>Subagents — many specialists, one orchestrator</h3>
+        <p>Isolate context, run work in parallel, and restrict blast radius.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/6</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">Learn</div>
+      <p>A <b>subagent</b> is a separate agent your main agent can spawn to handle a focused subtask. It gets its <b>own fresh context window</b> — it does not see the parent's conversation, and the parent gets back only the subagent's final message, not all the intermediate noise. That buys you four things worth memorizing: <b>context isolation</b> (a research subagent can read 40 files without polluting the main thread), <b>parallelization</b> (independent subagents run at once), <b>specialized instructions</b> (each has its own system prompt and expertise), and <b>tool restrictions</b> (a reviewer can be given read-only tools so it physically cannot edit anything).</p>
+      <p>You define them programmatically with the <code>agents</code> option on <code>query()</code>. Each entry is an <b>AgentDefinition</b> with a <code>description</code> (tells Claude <em>when</em> to use it), a <code>prompt</code> (its system prompt), and optional <code>tools</code>, <code>model</code>, and <code>skills</code>. Crucially, add <code>"Agent"</code> to <code>allowedTools</code> so the main agent is allowed to delegate without a permission prompt.</p>
+      <div class="block-label">Build — a two-specialist code reviewer</div>
+<pre><code><span class="tok-k">import</span> { query } <span class="tok-k">from</span> <span class="tok-s">"@anthropic-ai/claude-agent-sdk"</span>;
+
+<span class="tok-k">for</span> <span class="tok-k">await</span> (<span class="tok-k">const</span> msg <span class="tok-k">of</span> <span class="tok-f">query</span>({
+  prompt: <span class="tok-s">"Review the auth module for security and test coverage."</span>,
+  options: {
+    <span class="tok-c">// "Agent" lets the main agent delegate; the rest are for the subagents</span>
+    allowedTools: [<span class="tok-s">"Read"</span>, <span class="tok-s">"Grep"</span>, <span class="tok-s">"Glob"</span>, <span class="tok-s">"Bash"</span>, <span class="tok-s">"Agent"</span>],
+    agents: {
+      <span class="tok-s">"security-reviewer"</span>: {
+        description: <span class="tok-s">"Reviews code for security vulnerabilities. Use for any security question."</span>,
+        prompt: <span class="tok-s">"You are a security specialist. Find vulnerabilities and explain the risk. Do not modify files."</span>,
+        tools: [<span class="tok-s">"Read"</span>, <span class="tok-s">"Grep"</span>, <span class="tok-s">"Glob"</span>], <span class="tok-c">// read-only: cannot edit</span>
+        model: <span class="tok-s">"opus"</span>,
+      },
+      <span class="tok-s">"test-runner"</span>: {
+        description: <span class="tok-s">"Runs the test suite and reports coverage gaps."</span>,
+        prompt: <span class="tok-s">"You run tests and summarize failures and missing coverage clearly."</span>,
+        tools: [<span class="tok-s">"Bash"</span>, <span class="tok-s">"Read"</span>, <span class="tok-s">"Grep"</span>], <span class="tok-c">// can run commands</span>
+      },
+    },
+  },
+})) {
+  <span class="tok-k">if</span> (<span class="tok-s">"result"</span> <span class="tok-k">in</span> msg) <span class="tok-f">console</span>.log(msg.result);
+}</code></pre>
+      <p>Claude reads each subagent's <code>description</code> and decides which to call — you can also force one by naming it: <em>"Use the security-reviewer agent to…"</em>. Because both subtasks are independent, the SDK can run them in parallel.</p>
+      <div class="callout green"><b>Guardrails you'll want early.</b> Once <code>Agent</code> is allowed, Claude decides how many subagents to spawn, and they can spawn their own. Bound a run with <code>maxBudgetUsd</code> (a hard dollar cap) and the env vars <code>CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH</code> and <code>CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS</code>. Set these before you turn an agent loose on a big repo.</div>
+      <p>Two more things worth trying this week: <b>detecting delegation</b> (watch the message stream for a <code>tool_use</code> block named <code>"Agent"</code>) and the <b>filesystem alternative</b> — dropping markdown files in <code>.claude/agents/</code> instead of defining them in code. Programmatic definitions win if both exist with the same name.</p>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w6c1"><label for="w6c1"><span class="box">✓svg</span><span class="txt">Can name the four benefits of subagents (isolation, parallelism, specialization, tool limits)</span></label></div>
+        <div class="check"><input type="checkbox" id="w6c2"><label for="w6c2"><span class="box">✓svg</span><span class="txt">Defined two subagents via the <code>agents</code> option and added <code>"Agent"</code> to <code>allowedTools</code></span></label></div>
+        <div class="check"><input type="checkbox" id="w6c3"><label for="w6c3"><span class="box">✓svg</span><span class="txt">Gave one subagent a read-only tool set and confirmed it can't edit</span></label></div>
+        <div class="check"><input type="checkbox" id="w6c4"><label for="w6c4"><span class="box">✓svg</span><span class="txt">Forced a specific subagent by naming it in the prompt</span></label></div>
+        <div class="check"><input type="checkbox" id="w6c5"><label for="w6c5"><span class="box">✓svg</span><span class="txt">Set <code>maxBudgetUsd</code> and a depth/concurrency cap</span></label></div>
+        <div class="check"><input type="checkbox" id="w6c6"><label for="w6c6"><span class="box">✓svg</span><span class="txt">Detected a delegation by spotting an <code>"Agent"</code> tool_use in the stream</span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/subagents" target="_blank" rel="noopener"><span class="rt">Subagents in the SDK</span><span class="rd">code.claude.com · agents option, AgentDefinition</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener"><span class="rt">Subagents (full reference)</span><span class="rd">code.claude.com · filesystem agents, resume</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 7 -->
+  <div class="phase" id="w7">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="wk-badge"><span class="lbl">Week</span><span class="num">7</span></div>
+      <div class="phase-title">
+        <h3>Capstone — put it all together</h3>
+        <p>One small app that uses custom tools, a skill, and subagents.</p>
+      </div>
+      <div class="phase-meta">
+        <span class="phase-count" data-count>0/6</span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    </div>
+    <div class="phase-body">
+      <div class="block-label">The project</div>
+      <p>Build a <b>"repo assistant"</b> command-line agent. Given a path to a small project, it should: use a <b>custom tool</b> you wrote (e.g. count lines of code or fetch open TODOs), delegate a security pass and a documentation pass to two <b>subagents</b>, apply a <b>skill</b> that enforces your writing style on the summary it produces, and write a <code>REPORT.md</code>. This deliberately touches every concept from the plan.</p>
+      <div class="block-label">Make it real, not just working</div>
+      <p>The difference between a demo and something you trust is verification and guardrails. Spend the back half of this week here:</p>
+      <ul>
+        <li><b>Verify outputs.</b> Add a check that the report was actually written and is non-empty. For agents that produce data, assert on the shape of the result rather than eyeballing it.</li>
+        <li><b>Cap spend and turns.</b> Set <code>maxTurns</code> and <code>maxBudgetUsd</code> so a confused agent can't run up a bill or loop forever.</li>
+        <li><b>Scope permissions.</b> Give each subagent the narrowest <code>tools</code> list that still lets it work. Read-only by default; grant <code>Bash</code> or <code>Write</code> only where genuinely needed.</li>
+        <li><b>Handle failure.</b> Wrap the <code>query()</code> loop in try/catch and decide what a partial failure should do. Watch the <code>result</code> message's subtype for budget/turn-limit endings.</li>
+        <li><b>Keep secrets out of git.</b> Confirm <code>.env</code> and any keys are gitignored before you push anywhere.</li>
+      </ul>
+      <div class="callout blue"><b>Stretch goals, if you're enjoying it:</b> add <a class="inline-link" href="https://code.claude.com/docs/en/agent-sdk/hooks" target="_blank" rel="noopener">hooks</a> to log every tool call; connect a real external <a class="inline-link" href="https://code.claude.com/docs/en/agent-sdk/mcp" target="_blank" rel="noopener">MCP server</a> so a subagent can reach a live data source; or explore <a class="inline-link" href="https://code.claude.com/docs/en/agent-sdk/sessions" target="_blank" rel="noopener">sessions</a> to make your assistant resumable across runs.</div>
+      <div class="block-label">Checklist</div>
+      <div class="checklist">
+        <div class="check"><input type="checkbox" id="w7c1"><label for="w7c1"><span class="box">✓svg</span><span class="txt">App uses at least one custom tool I wrote</span></label></div>
+        <div class="check"><input type="checkbox" id="w7c2"><label for="w7c2"><span class="box">✓svg</span><span class="txt">Delegates to two or more subagents with scoped tools</span></label></div>
+        <div class="check"><input type="checkbox" id="w7c3"><label for="w7c3"><span class="box">✓svg</span><span class="txt">Applies a skill to shape the final output</span></label></div>
+        <div class="check"><input type="checkbox" id="w7c4"><label for="w7c4"><span class="box">✓svg</span><span class="txt">Writes a real file and verifies it exists and isn't empty</span></label></div>
+        <div class="check"><input type="checkbox" id="w7c5"><label for="w7c5"><span class="box">✓svg</span><span class="txt">Has <code>maxTurns</code>, a budget cap, and try/catch error handling</span></label></div>
+        <div class="check"><input type="checkbox" id="w7c6"><label for="w7c6"><span class="box">✓svg</span><span class="txt">Wrote a short README explaining how it works — using my own skill</span></label></div>
+      </div>
+      <div class="block-label">This week's docs</div>
+      <div class="res-grid">
+        <a class="res" href="https://github.com/anthropics/claude-agent-sdk-demos" target="_blank" rel="noopener"><span class="rt">Example agents (demos)</span><span class="rd">github.com · full working apps to learn from</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/permissions" target="_blank" rel="noopener"><span class="rt">Permissions</span><span class="rd">code.claude.com · control what runs</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/sessions" target="_blank" rel="noopener"><span class="rt">Sessions</span><span class="rd">code.claude.com · resume &amp; fork</span></a>
+        <a class="res" href="https://code.claude.com/docs/en/agent-sdk/hooks" target="_blank" rel="noopener"><span class="rt">Hooks</span><span class="rd">code.claude.com · lifecycle callbacks</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOSSARY -->
+  <h2 class="section" id="glossary">Glossary — the words that trip people up</h2>
+  <p class="section-sub">Skim this now; come back whenever a term feels fuzzy.</p>
+  <dl class="gloss">
+    <dt>Client SDK vs Agent SDK</dt>
+    <dd><code>@anthropic-ai/sdk</code> is the low-level Messages API client where you write the tool loop. <code>@anthropic-ai/claude-agent-sdk</code> is the high-level library that runs the loop, tools, subagents, and skills for you.</dd>
+    <dt>Content block</dt>
+    <dd>A response isn't plain text — it's a list of typed blocks. A block can be <code>text</code>, a <code>tool_use</code> request, a <code>tool_result</code>, and more. Understanding blocks is the key that unlocks everything else.</dd>
+    <dt>The agent loop</dt>
+    <dd>The repeating cycle of: model asks for a tool → your code runs it → you send the result back → repeat until the model gives a final answer. You build it in Week 2; the Agent SDK automates it from Week 3 on.</dd>
+    <dt>Tool</dt>
+    <dd>A function you expose to the model, described with a name, a description, and a JSON input schema. The model can't run code itself — it asks you (or the SDK) to run tools on its behalf.</dd>
+    <dt>Built-in tools</dt>
+    <dd>Tools the Agent SDK ships with, the same ones that power Claude Code: <code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Bash</code>, <code>Glob</code>, <code>Grep</code>, <code>WebSearch</code>, <code>WebFetch</code>, plus orchestration tools like <code>Agent</code>, <code>Skill</code>, and <code>TodoWrite</code>. You enable them by listing their names in <code>allowedTools</code>.</dd>
+    <dt>MCP (Model Context Protocol)</dt>
+    <dd>A standard way to package and connect tools and data sources. In the Agent SDK you bundle your own tools into an in-process MCP server with <code>createSdkMcpServer()</code>, or connect external MCP servers over <b>stdio</b> (a local command) or <b>HTTP</b> (a URL). Every MCP tool is named <code>mcp__&lt;server&gt;__&lt;tool&gt;</code>.</dd>
+    <dt>tool_choice</dt>
+    <dd>A Client SDK setting that controls whether the model may, must, or must-not call a tool: <code>{ type: "auto" }</code> lets it decide, <code>{ type: "any" }</code> requires some tool, and <code>{ type: "tool", name }</code> forces a specific one. Handy for reliable structured extraction.</dd>
+    <dt>Skill</dt>
+    <dd>A folder (anchored by <code>SKILL.md</code>) that teaches Claude how to do a task well. Claude loads the full skill only when its <code>description</code> matches the task — this is called <em>progressive disclosure</em>.</dd>
+    <dt>Subagent</dt>
+    <dd>A separate agent instance spawned for a focused subtask. It has its own fresh context and returns only a final summary to the parent. Great for isolation, parallelism, and limiting what a piece of the system can touch.</dd>
+    <dt>AgentDefinition</dt>
+    <dd>The config object for a subagent: <code>description</code> (when to use it), <code>prompt</code> (its system prompt), and optional <code>tools</code>, <code>model</code>, and <code>skills</code>.</dd>
+    <dt>permissionMode / allowedTools</dt>
+    <dd>How the Agent SDK decides which tool calls run automatically vs. need approval. Add a tool name to <code>allowedTools</code> to auto-approve it — including <code>"Agent"</code> to let the main agent delegate to subagents.</dd>
+  </dl>
+
+  <!-- RESOURCES -->
+  <h2 class="section" id="resources">All the official docs in one place</h2>
+  <p class="section-sub">When in doubt, these are the sources of truth. Everything here is Anthropic's own documentation.</p>
+  <div class="res-grid">
+    <a class="res" href="https://code.claude.com/docs/en/agent-sdk/overview" target="_blank" rel="noopener"><span class="rt">Agent SDK — Overview</span><span class="rd">code.claude.com/docs/en/agent-sdk/overview</span></a>
+    <a class="res" href="https://code.claude.com/docs/en/agent-sdk/typescript" target="_blank" rel="noopener"><span class="rt">Agent SDK — TypeScript reference</span><span class="rd">code.claude.com/docs/en/agent-sdk/typescript</span></a>
+    <a class="res" href="https://code.claude.com/docs/en/agent-sdk/subagents" target="_blank" rel="noopener"><span class="rt">Subagents in the SDK</span><span class="rd">code.claude.com/docs/en/agent-sdk/subagents</span></a>
+    <a class="res" href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" rel="noopener"><span class="rt">The agent loop</span><span class="rd">code.claude.com/docs/en/agent-sdk/agent-loop</span></a>
+    <a class="res" href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener"><span class="rt">Agent Skills — Overview</span><span class="rd">platform.claude.com · skills concepts</span></a>
+    <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/skills-guide" target="_blank" rel="noopener"><span class="rt">Using Skills with the API</span><span class="rd">platform.claude.com · skills-guide</span></a>
+    <a class="res" href="https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/typescript" target="_blank" rel="noopener"><span class="rt">Client SDK — TypeScript</span><span class="rd">platform.claude.com · the low-level SDK</span></a>
+    <a class="res" href="https://platform.claude.com/docs/en/build-with-claude/tool-use/overview" target="_blank" rel="noopener"><span class="rt">Tool use — Overview</span><span class="rd">platform.claude.com · the manual tool loop</span></a>
+    <a class="res" href="https://github.com/anthropics/skills" target="_blank" rel="noopener"><span class="rt">anthropics/skills</span><span class="rd">github.com · open-source example skills</span></a>
+    <a class="res" href="https://github.com/anthropics/claude-agent-sdk-demos" target="_blank" rel="noopener"><span class="rt">claude-agent-sdk-demos</span><span class="rd">github.com · full example agents</span></a>
+  </div>
+
+  <footer>
+    Built as a self-paced learning plan · Verify code against the linked official docs, which are always current.<br>
+    Content reflects Anthropic documentation as of August 2026.<br><br>
+    <span style="color:var(--text-soft)">This learning plan was created by <b>Donald Conway</b>, together with Claude (Cowork).</span>
+  </footer>
+
+</div>
+
+<script>
+  // Open Week 1 by default
+  document.addEventListener("DOMContentLoaded", () => {
+    const first = document.getElementById("w1");
+    if (first) first.classList.add("open");
+    injectCheckIcons();
+    updateProgress();
+  });
+
+  function togglePhase(header) {
+    header.closest(".phase").classList.toggle("open");
+  }
+
+  // Replace the "✓svg" placeholder text with a real check icon
+  function injectCheckIcons() {
+    document.querySelectorAll(".check .box").forEach((box) => {
+      box.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#0f1115" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    });
+  }
+
+  // Progress bar + per-week counts. Toggling also saves to the linked file.
+  const boxes = Array.from(document.querySelectorAll('.check input[type="checkbox"]'));
+  boxes.forEach((b) => b.addEventListener("change", () => { updateProgress(); saveFile(); }));
+
+  function updateProgress() {
+    const total = boxes.length;
+    const done = boxes.filter((b) => b.checked).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    document.getElementById("barFill").style.width = pct + "%";
+    document.getElementById("pct").textContent = pct + "% complete";
+
+    // per-phase counts
+    document.querySelectorAll(".phase").forEach((phase) => {
+      const inputs = phase.querySelectorAll('.check input[type="checkbox"]');
+      const counter = phase.querySelector("[data-count]");
+      if (!inputs.length || !counter) return;
+      const c = Array.from(inputs).filter((i) => i.checked).length;
+      counter.textContent = c + "/" + inputs.length;
+    });
+  }
+
+  /* ============================================================
+     PROGRESS.md two-way sync (File System Access API)
+     Tick a box -> written to PROGRESS.md. Reopen -> read back.
+     ============================================================ */
+  (function () {
+    "use strict";
+    var hasFSA = ("showOpenFilePicker" in window);
+    var DB = "cac-plan", STORE = "handles", KEY = "progressFile";
+    var fileHandle = null, fileName = "PROGRESS.md";
+
+    var $ = function (s) { return document.querySelector(s); };
+    function setSync(msg, kind) { var el = $("#syncStatus"); if (el) { el.textContent = msg; el.className = "sync-status " + (kind || ""); } }
+    function show(id, on) { var el = $(id); if (el) el.style.display = on ? "" : "none"; }
+    function toolbar(kind) { show("#linkBtn", kind === "link"); show("#reconnectBtn", kind === "reconnect"); show("#reloadBtn", kind === "linked"); }
+
+    // --- tiny IndexedDB so the file link survives reopening ---
+    function idb() { return new Promise(function (res, rej) { try { var r = indexedDB.open(DB, 1); r.onupgradeneeded = function () { r.result.createObjectStore(STORE); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; } catch (e) { rej(e); } }); }
+    function idbGet(k) { return idb().then(function (db) { return new Promise(function (res, rej) { var t = db.transaction(STORE, "readonly").objectStore(STORE).get(k); t.onsuccess = function () { res(t.result); }; t.onerror = function () { rej(t.error); }; }); }).catch(function () { return null; }); }
+    function idbSet(k, v) { return idb().then(function (db) { return new Promise(function (res, rej) { var tx = db.transaction(STORE, "readwrite"); tx.objectStore(STORE).put(v, k); tx.oncomplete = function () { res(); }; tx.onerror = function () { rej(tx.error); }; }); }).catch(function () {}); }
+
+    // --- map between the page checkboxes and PROGRESS.md ---
+    function norm(s) { return s.replace(/`/g, "").replace(/\s+/g, " ").trim().toLowerCase(); }
+    function sectionOf(phase) {
+      var num = phase.querySelector(".wk-badge .num").textContent.trim();
+      var title = phase.querySelector(".phase-title h3").textContent.trim();
+      return "Week " + num + " · " + title;
+    }
+    function labelMd(input) {
+      var txt = input.closest(".check").querySelector(".txt");
+      var clone = txt.cloneNode(true);
+      clone.querySelectorAll("code").forEach(function (c) { c.replaceWith("`" + c.textContent + "`"); });
+      return clone.textContent.replace(/\s+/g, " ").trim();
+    }
+    function buildMarkdown() {
+      var out = ["# Progress · Claude Agents Course", "", "Synced from the learning plan page — tick items there and they save here.", ""];
+      document.querySelectorAll(".phase").forEach(function (phase) {
+        out.push("## " + sectionOf(phase));
+        phase.querySelectorAll('.check input[type="checkbox"]').forEach(function (cb) {
+          out.push("- [" + (cb.checked ? "x" : " ") + "] " + labelMd(cb));
+        });
+        out.push("");
+      });
+      return out.join("\n");
+    }
+    function parseFile(text) {
+      var map = {}, section = null;
+      text.split("\n").forEach(function (line) {
+        var h = line.match(/^##\s+(.*)$/);
+        if (h) { section = h[1].trim(); return; }
+        var m = line.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+        if (m && section != null) map[section + "||" + norm(m[2])] = (m[1].toLowerCase() === "x");
+      });
+      return map;
+    }
+    function applyStates(map) {
+      document.querySelectorAll(".phase").forEach(function (phase) {
+        var section = sectionOf(phase);
+        phase.querySelectorAll('.check input[type="checkbox"]').forEach(function (cb) {
+          var key = section + "||" + norm(labelMd(cb));
+          if (key in map) cb.checked = map[key];
+        });
+      });
+      updateProgress();
+    }
+
+    // --- read / write ---
+    function saveFile() {
+      if (!fileHandle) return; // not linked yet; nothing to persist
+      setSync("Saving…");
+      fileHandle.createWritable().then(function (w) {
+        return w.write(buildMarkdown()).then(function () { return w.close(); });
+      }).then(function () {
+        setSync("Saved to " + fileName + " ✓", "ok");
+      }).catch(function (e) { setSync("Save failed: " + e.message, "err"); });
+    }
+    window.saveFile = saveFile; // used by the checkbox change handler above
+
+    function ensurePerm(h) {
+      var o = { mode: "readwrite" };
+      return h.queryPermission(o).then(function (p) {
+        if (p === "granted") return true;
+        return h.requestPermission(o).then(function (p2) { return p2 === "granted"; });
+      });
+    }
+    function loadFrom(h, announce) {
+      return h.getFile().then(function (f) { return f.text(); }).then(function (t) {
+        applyStates(parseFile(t));
+        if (announce) setSync("Linked " + h.name + " ✓", "ok");
+        toolbar("linked");
+      });
+    }
+
+    function linkFile() {
+      window.showOpenFilePicker({
+        types: [{ description: "Markdown", accept: { "text/markdown": [".md"], "text/plain": [".md", ".markdown"] } }]
+      }).then(function (arr) {
+        var h = arr[0];
+        return ensurePerm(h).then(function (ok) {
+          if (!ok) { setSync("Permission needed to read/write the file", "err"); return; }
+          fileHandle = h; fileName = h.name;
+          return idbSet(KEY, h).then(function () {
+            return loadFrom(h, false).then(function () { saveFile(); }); // adopt existing ticks, then normalize the file
+          });
+        });
+      }).catch(function (e) { if (e && e.name !== "AbortError") setSync("Could not link file: " + e.message, "err"); });
+    }
+    function reconnect() {
+      if (!fileHandle) return linkFile();
+      ensurePerm(fileHandle).then(function (ok) {
+        if (!ok) { setSync("Permission denied", "err"); return; }
+        fileName = fileHandle.name;
+        loadFrom(fileHandle, true);
+      });
+    }
+    function reload() { if (fileHandle) loadFrom(fileHandle, false).then(function () { setSync("Reloaded " + fileName, "ok"); }); }
+
+    // --- wire up + init ---
+    $("#linkBtn").addEventListener("click", linkFile);
+    $("#reconnectBtn").addEventListener("click", reconnect);
+    $("#reloadBtn").addEventListener("click", reload);
+
+    if (!hasFSA) {
+      setSync("Checklist works here, but saving to PROGRESS.md needs Chrome or Edge.", "warn");
+      toolbar("none");
+      return;
+    }
+    idbGet(KEY).then(function (h) {
+      if (h) {
+        fileHandle = h; fileName = h.name;
+        return h.queryPermission({ mode: "readwrite" }).then(function (perm) {
+          if (perm === "granted") return loadFrom(h, true);
+          setSync("Click “Reconnect” to re-link " + h.name, "warn"); toolbar("reconnect");
+        }).catch(function () { setSync("Click “Reconnect” to re-link " + h.name, "warn"); toolbar("reconnect"); });
+      }
+      setSync("Click “Link PROGRESS.md” to save your progress to the file.", ""); toolbar("link");
+    }).catch(function () {
+      setSync("Click “Link PROGRESS.md” to save your progress to the file.", ""); toolbar("link");
+    });
+  })();
+</script>
+
+</body>
+</html>

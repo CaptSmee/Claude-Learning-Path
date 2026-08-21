@@ -69,7 +69,7 @@ code here. Add new scripts inside the matching folder and wire up an npm script 
 | 6 | Subagents | `week6/` |
 | 7 | Capstone — put it all together | `week7/` |
 
-Track your progress in `PROGRESS.md`.
+Track your progress in `PROGRESS.md` — but you don't edit it by hand. Open `learning-plan.html` (in the repo root) with Chrome or Edge, click **Link PROGRESS.md**, and pick the file once. Every checkbox you tick on the plan page then saves straight into `PROGRESS.md` and is read back when you reopen the page. Commit `PROGRESS.md` to keep your progress in git.
 
 ## 6. Put it on GitHub
 
